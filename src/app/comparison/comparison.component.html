@@ -1,0 +1,33 @@
+<div class="bg-white p-6 rounded-lg shadow">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+        <label for="country1" class="block text-sm font-medium text-gray-700">Pierwszy kraj</label>
+        <select 
+            id="country1"
+            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            [(ngModel)]="selectedCountry1"
+            (ngModelChange)="onCountrySelect()">
+            <option value="">Wybierz kraj</option>
+            <option *ngFor="let country of countries" [value]="country.country">
+            {{country.country}}
+            </option>
+        </select>
+        </div>
+        <div>
+        <label for="country2" class="block text-sm font-medium text-gray-700">Drugi kraj</label>
+        <select 
+            id="country2"
+            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            [(ngModel)]="selectedCountry2"
+            (ngModelChange)="onCountrySelect()">
+            <option value="">Wybierz kraj</option>
+            <option *ngFor="let country of countries" [value]="country.country">
+            {{country.country}}
+            </option>
+        </select>
+        </div>
+    </div>
+    <div class="h-96">
+        <canvas #comparisonChart></canvas>
+    </div>
+</div>

@@ -1,0 +1,29 @@
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow">
+        <h2 class="text-xl font-semibold mb-4">Globalne statystyki</h2>
+        <div class="grid grid-cols-2 gap-4">
+        <div class="bg-blue-100 p-4 rounded">
+            <h3 class="text-blue-800">Przypadki</h3>
+            <p class="text-2xl font-bold">{{globalStats?.cases | number}}</p>
+        </div>
+        <div class="bg-red-100 p-4 rounded">
+            <h3 class="text-red-800">Zgony</h3>
+            <p class="text-2xl font-bold">{{globalStats?.deaths | number}}</p>
+        </div>
+        <div class="bg-green-100 p-4 rounded">
+            <h3 class="text-green-800">Wyleczeni</h3>
+            <p class="text-2xl font-bold">{{globalStats?.recovered | number}}</p>
+        </div>
+        <div class="bg-yellow-100 p-4 rounded">
+            <h3 class="text-yellow-800">Aktywne przypadki</h3>
+            <p class="text-2xl font-bold">{{globalStats?.active | number}}</p>
+        </div>
+        </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow">
+        <canvas #globalChart></canvas>
+    </div>
+    </div>
+    <div class="bg-white p-6 rounded-lg shadow mb-8">
+    <div #map style="height: 400px;"></div>
+</div>
