@@ -1,29 +1,37 @@
-<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-    <div class="bg-white p-6 rounded-lg shadow">
-        <h2 class="text-xl font-semibold mb-4">Globalne statystyki</h2>
-        <div class="grid grid-cols-2 gap-4">
-        <div class="bg-blue-100 p-4 rounded">
-            <h3 class="text-blue-800">Przypadki</h3>
-            <p class="text-2xl font-bold">{{globalStats?.cases | number}}</p>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold mb-6">Globalne statystyki</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="text-lg font-semibold mb-2">Przypadki</h2>
+        <p class="text-xl">{{globalStats?.cases | number}}</p>
         </div>
-        <div class="bg-red-100 p-4 rounded">
-            <h3 class="text-red-800">Zgony</h3>
-            <p class="text-2xl font-bold">{{globalStats?.deaths | number}}</p>
+        <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="text-lg font-semibold mb-2">Zgony</h2>
+        <p class="text-xl">{{globalStats?.deaths | number}}</p>
         </div>
-        <div class="bg-green-100 p-4 rounded">
-            <h3 class="text-green-800">Wyleczeni</h3>
-            <p class="text-2xl font-bold">{{globalStats?.recovered | number}}</p>
+        <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="text-lg font-semibold mb-2">Wyleczeni</h2>
+        <p class="text-xl">{{globalStats?.recovered | number}}</p>
         </div>
-        <div class="bg-yellow-100 p-4 rounded">
-            <h3 class="text-yellow-800">Aktywne przypadki</h3>
-            <p class="text-2xl font-bold">{{globalStats?.active | number}}</p>
-        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+        <h2 class="text-lg font-semibold mb-2">Aktywne przypadki</h2>
+        <p class="text-xl">{{globalStats?.active | number}}</p>
         </div>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow">
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="bg-white rounded-lg shadow p-4" *ngIf="isBrowser">
+        <h2 class="text-lg font-semibold mb-4">Mapa przypadków</h2>
+        <div #map style="height: 400px;" class="z-0"></div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4" *ngIf="isBrowser">
+        <h2 class="text-lg font-semibold mb-4">Wykres globalny</h2>
         <canvas #globalChart></canvas>
+        </div>
     </div>
+
+    <div *ngIf="!isBrowser" class="text-center py-4">
+        <p>Mapa i wykres będą dostępne po załadowaniu strony.</p>
     </div>
-    <div class="bg-white p-6 rounded-lg shadow mb-8">
-    <div #map style="height: 400px;"></div>
 </div>

@@ -1,8 +1,8 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Inject, OnInit, PLATFORM_ID, ViewChild } from '@angular/core';
 import { Chart } from 'chart.js/auto';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { CovidDataService, GlobalStats } from '../covid-data.service';
 
 @Component({
@@ -12,68 +12,93 @@ import { CovidDataService, GlobalStats } from '../covid-data.service';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('map') mapElement!: ElementRef;
   @ViewChild('globalChart') chartElement!: ElementRef;
   
   globalStats: GlobalStats | null = null;
+  private map: any;
   private L: any;
   private Chart: any;
-  private map: any;
+  isBrowser: boolean;
 
-  constructor(private covidDataService: CovidDataService) {}
+  constructor(
+    private covidDataService: CovidDataService,
+    @Inject(PLATFORM_ID) platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
-  async ngOnInit() {
-    if (typeof window !== 'undefined') {
-      const [L, { Chart }] = await Promise.all([
-        import('leaflet'),
-        import('chart.js/auto')
-      ]);
-      
-      this.L = L;
-      this.Chart = Chart;
-      
-      this.covidDataService.getGlobalStats().subscribe((stats: any) => {
-        this.globalStats = stats;
+  ngOnInit() {
+    this.covidDataService.getGlobalStats().subscribe((stats: any) => {
+      this.globalStats = stats;
+      if (this.isBrowser && this.Chart) {
         this.createGlobalChart();
-      });
+      }
+    });
+  }
+
+  async ngAfterViewInit() {
+    if (!this.isBrowser) return;
+
+    try {
+      // Dynamically import Leaflet and Chart.js only in browser environment
+      const leafletModule = await import('leaflet');
+      const chartModule = await import('chart.js/auto');
       
-      setTimeout(() => {
-        this.initMap();
-        this.loadCountriesData();
-      }, 0);
+      this.L = leafletModule.default;
+      this.Chart = chartModule.Chart;
+      
+      this.initMap();
+      this.loadCountriesData();
+      
+      if (this.globalStats) {
+        this.createGlobalChart();
+      }
+    } catch (error) {
+      console.error('Error loading modules:', error);
     }
   }
 
   private initMap() {
-    if (this.mapElement && this.L) {
+    if (!this.isBrowser || !this.mapElement?.nativeElement || !this.L) return;
+
+    try {
       this.map = this.L.map(this.mapElement.nativeElement).setView([0, 0], 2);
       this.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
       }).addTo(this.map);
+    } catch (error) {
+      console.error('Error initializing map:', error);
     }
   }
 
   private loadCountriesData() {
+    if (!this.isBrowser || !this.map || !this.L) return;
+
     this.covidDataService.getAllCountriesStats().subscribe((countries: any[]) => {
       countries.forEach(country => {
-        this.L.circle([country.countryInfo.lat, country.countryInfo.long], {
-          color: 'red',
-          fillColor: '#f03',
-          fillOpacity: 0.5,
-          radius: Math.sqrt(country.cases) * 100
-        }).bindPopup(`
-          <b>${country.country}</b><br>
-          Przypadki: ${country.cases}<br>
-          Zgony: ${country.deaths}<br>
-          Wyleczeni: ${country.recovered}
-        `).addTo(this.map);
+        if (country.countryInfo.lat && country.countryInfo.long) {
+          this.L.circle([country.countryInfo.lat, country.countryInfo.long], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.5,
+            radius: Math.sqrt(country.cases) * 100
+          }).bindPopup(`
+            <strong>${country.country}</strong><br>
+            Przypadki: ${country.cases}<br>
+            Zgony: ${country.deaths}<br>
+            Wyleczeni: ${country.recovered}
+          `).addTo(this.map);
+        }
       });
     });
   }
 
   private createGlobalChart() {
-    if (this.chartElement && this.Chart && this.globalStats) {
+    if (!this.isBrowser || !this.chartElement?.nativeElement || !this.Chart || !this.globalStats) return;
+
+    try {
       new this.Chart(this.chartElement.nativeElement, {
         type: 'pie',
         data: {
@@ -98,6 +123,8 @@ export class DashboardComponent implements OnInit {
           }]
         }
       });
+    } catch (error) {
+      console.error('Error creating chart:', error);
     }
   }
 }
