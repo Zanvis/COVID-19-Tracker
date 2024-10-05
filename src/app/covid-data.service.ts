@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, forkJoin, map, tap } from 'rxjs';
 
 export interface GlobalStats {
   cases: number;
@@ -8,6 +8,12 @@ export interface GlobalStats {
   recovered: number;
   active: number;
   updated: number;
+  isRecoveredEstimated?: boolean;
+  todayCases: number;
+  todayDeaths: number;
+  todayRecovered: number;
+  casesPerOneMillion: number;
+  deathsPerOneMillion: number;
 }
 
 export interface CountryInfo {
@@ -26,6 +32,17 @@ export interface CountryStats extends GlobalStats {
   population: number;
 }
 
+export interface ContinentStats extends GlobalStats {
+  continent: string;
+  countries: string[];
+}
+
+export interface HistoricalData {
+  cases: { [key: string]: number };
+  deaths: { [key: string]: number };
+  recovered: { [key: string]: number };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -33,45 +50,94 @@ export class CovidDataService {
   private baseUrl = 'https://disease.sh/v3/covid-19';
   private globalStatsSubject = new BehaviorSubject<GlobalStats | null>(null);
   private countriesStatsSubject = new BehaviorSubject<CountryStats[]>([]);
+  private continentStatsSubject = new BehaviorSubject<ContinentStats[]>([]);
+  private historicalDataSubject = new BehaviorSubject<HistoricalData | null>(null);
 
   constructor(private http: HttpClient) {
     this.loadInitialData();
   }
 
   private loadInitialData() {
-    this.getGlobalStats().subscribe();
-    this.getAllCountriesStats().subscribe();
+    forkJoin({
+      global: this.fetchGlobalStats(),
+      countries: this.fetchCountriesStats(),
+      continents: this.fetchContinentStats(),
+      historical: this.fetchHistoricalData()
+    }).subscribe({
+      next: (data) => {
+        this.globalStatsSubject.next(data.global);
+        this.countriesStatsSubject.next(data.countries);
+        this.continentStatsSubject.next(data.continents);
+        this.historicalDataSubject.next(data.historical);
+      },
+      error: (error) => console.error('Error loading initial data:', error)
+    });
+  }
+
+  private fetchGlobalStats(): Observable<GlobalStats> {
+    return this.http.get<GlobalStats>(`${this.baseUrl}/all`).pipe(
+      map(stats => this.processStats(stats))
+    );
+  }
+
+  private fetchCountriesStats(): Observable<CountryStats[]> {
+    return this.http.get<CountryStats[]>(`${this.baseUrl}/countries`).pipe(
+      map(countries => countries.map(country => this.processStats(country) as CountryStats))
+    );
+  }
+
+  private fetchContinentStats(): Observable<ContinentStats[]> {
+    return this.http.get<ContinentStats[]>(`${this.baseUrl}/continents`).pipe(
+      map(continents => continents.map(continent => this.processStats(continent) as ContinentStats))
+    );
+  }
+
+  private fetchHistoricalData(): Observable<HistoricalData> {
+    return this.http.get<HistoricalData>(`${this.baseUrl}/historical/all?lastdays=30`);
+  }
+
+  private processStats<T extends GlobalStats>(stats: T): T {
+    const isRecoveredEstimated = !stats.recovered;
+    return {
+      ...stats,
+      recovered: stats.recovered || this.estimateRecovered(stats),
+      active: stats.active || this.calculateActive(stats),
+      isRecoveredEstimated
+    };
+  }
+
+  private estimateRecovered(stats: GlobalStats): number {
+    if (!stats.recovered) {
+      const closedCases = stats.cases - (stats.active || 0);
+      return Math.round(closedCases * 0.98);
+    }
+    return stats.recovered;
+  }
+
+  private calculateActive(stats: GlobalStats): number {
+    if (!stats.active) {
+      return stats.cases - (stats.deaths + this.estimateRecovered(stats));
+    }
+    return stats.active;
   }
 
   getGlobalStats(): Observable<GlobalStats> {
-    if (this.globalStatsSubject.value) {
-      return this.globalStatsSubject.asObservable() as Observable<GlobalStats>;
-    }
-
-    return this.http.get<GlobalStats>(`${this.baseUrl}/all`).pipe(
-      tap(stats => this.globalStatsSubject.next(stats))
-    );
+    return this.globalStatsSubject.asObservable() as Observable<GlobalStats>;
   }
 
   getAllCountriesStats(): Observable<CountryStats[]> {
-    if (this.countriesStatsSubject.value.length > 0) {
-      return this.countriesStatsSubject.asObservable();
-    }
-
-    return this.http.get<CountryStats[]>(`${this.baseUrl}/countries`).pipe(
-      tap(countries => this.countriesStatsSubject.next(countries))
-    );
+    return this.countriesStatsSubject.asObservable();
   }
 
-  getCountryStats(country: string): Observable<CountryStats | undefined> {
-    return this.getAllCountriesStats().pipe(
-      map(countries => countries.find(c => c.country.toLowerCase() === country.toLowerCase()))
-    );
+  getContinentStats(): Observable<ContinentStats[]> {
+    return this.continentStatsSubject.asObservable();
+  }
+
+  getHistoricalData(): Observable<HistoricalData | null> {
+    return this.historicalDataSubject.asObservable();
   }
 
   refreshData() {
-    this.getGlobalStats().subscribe();
-    this.getAllCountriesStats().subscribe();
+    this.loadInitialData();
   }
 }
-

@@ -1,26 +1,85 @@
-<div *ngIf="countryData" class="bg-white p-6 rounded-lg shadow">
-    <h2 class="text-2xl font-bold mb-4">{{countryData.country}}</h2>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <canvas #countryChart></canvas>
+<div class="container mx-auto p-4">
+    <div *ngIf="loading" class="text-center py-8">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+    <p class="mt-4 text-gray-600">Ładowanie danych...</p>
+</div>
+
+<div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+    <strong class="font-bold">Błąd!</strong>
+    <span class="block sm:inline">{{ error }}</span>
+</div>
+
+<div *ngIf="countryData && !loading" class="space-y-6">
+    <div class="flex items-center space-x-4">
+    <img [src]="countryData.countryInfo.flag" [alt]="countryData.country" class="w-12 h-8 object-cover rounded shadow">
+    <h1 class="text-3xl font-bold">{{ countryData.country }}</h1>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-blue-100 p-4 rounded-lg shadow">
+            <h3 class="text-lg font-semibold text-blue-800">Całkowite statystyki</h3>
+            <div class="mt-2 space-y-2">
+            <p><span class="font-medium">Przypadki:</span> {{ countryData.cases | number }}</p>
+            <p><span class="font-medium">Aktywne:</span> {{ countryData.active | number }}</p>
+            <p><span class="font-medium">Zgony:</span> {{ countryData.deaths | number }}</p>
+            <p><span class="font-medium">Wyleczeni:</span> {{ countryData.recovered | number }}</p>
+            </div>
         </div>
-        <div class="grid grid-cols-2 gap-4">
-        <div class="bg-blue-100 p-4 rounded">
-            <h3 class="text-blue-800">Przypadki</h3>
-            <p class="text-2xl font-bold">{{countryData.cases | number}}</p>
+
+        <div class="bg-green-100 p-4 rounded-lg shadow">
+            <h3 class="text-lg font-semibold text-green-800">Dzisiejsze statystyki</h3>
+            <div class="mt-2 space-y-2">
+            <p><span class="font-medium">Nowe przypadki:</span> {{ countryData.todayCases | number }}</p>
+            <p><span class="font-medium">Dzisiejsze zgony:</span> {{ countryData.todayDeaths | number }}</p>
+            <p><span class="font-medium">Dziś wyleczeni:</span> {{ countryData.todayRecovered | number }}</p>
+            </div>
         </div>
-        <div class="bg-red-100 p-4 rounded">
-            <h3 class="text-red-800">Zgony</h3>
-            <p class="text-2xl font-bold">{{countryData.deaths | number}}</p>
+
+        <div class="bg-purple-100 p-4 rounded-lg shadow">
+            <h3 class="text-lg font-semibold text-purple-800">Statystyki na milion</h3>
+            <div class="mt-2 space-y-2">
+            <p><span class="font-medium">Przypadki:</span> {{ countryData.casesPerOneMillion | number:'1.0-0' }}</p>
+            <p><span class="font-medium">Zgony:</span> {{ countryData.deathsPerOneMillion | number:'1.0-0' }}</p>
+            </div>
         </div>
-        <div class="bg-green-100 p-4 rounded">
-            <h3 class="text-green-800">Wyleczeni</h3>
-            <p class="text-2xl font-bold">{{countryData.recovered | number}}</p>
+
+        <div class="bg-yellow-100 p-4 rounded-lg shadow">
+            <h3 class="text-lg font-semibold text-yellow-800">Informacje o populacji</h3>
+            <div class="mt-2">
+            <p class="text-2xl font-bold">{{ countryData.population | number }}</p>
+            <p class="text-sm">mieszkańców</p>
+            </div>
         </div>
-        <div class="bg-yellow-100 p-4 rounded">
-            <h3 class="text-yellow-800">Aktywne przypadki</h3>
-            <p class="text-2xl font-bold">{{countryData.active | number}}</p>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        <div class="bg-white p-4 rounded-lg shadow">
+            <canvas #casesChart></canvas>
+        </div>
+        <div class="bg-white p-4 rounded-lg shadow">
+            <canvas #rateChart></canvas>
+        </div>
+        </div>
+
+        <div *ngIf="countryData.isRecoveredEstimated" class="bg-yellow-100 border-l-4 border-yellow-500 p-4 mt-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-yellow-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            </div>
+            <div class="ml-3">
+            <p class="text-sm text-yellow-700">
+                Liczba wyleczonych jest szacunkowa ze względu na brak dokładnych danych z tego kraju.
+            </p>
+            </div>
+        </div>
+        </div>
+
+        <div class="bg-gray-100 p-4 rounded-lg shadow mt-4">
+            <h3 class="text-lg font-semibold text-gray-800">Informacje dodatkowe</h3>
+            <p class="mt-2"><span class="font-medium">Kontynent:</span> {{ countryData.continent }}</p>
+            <p><span class="font-medium">Ostatnia aktualizacja:</span> {{ countryData.updated | date:'medium' }}</p>
         </div>
     </div>
 </div>

@@ -3,7 +3,8 @@ import { Chart } from 'chart.js/auto';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { CovidDataService, GlobalStats } from '../covid-data.service';
+import { ContinentStats, CovidDataService, GlobalStats, HistoricalData } from '../covid-data.service';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,9 +15,14 @@ import { CovidDataService, GlobalStats } from '../covid-data.service';
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('map') mapElement!: ElementRef;
-  @ViewChild('globalChart') chartElement!: ElementRef;
+  @ViewChild('globalChart') globalChartElement!: ElementRef;
+  @ViewChild('continentChart') continentChartElement!: ElementRef;
+  @ViewChild('trendChart') trendChartElement!: ElementRef;
   
   globalStats: GlobalStats | null = null;
+  continentStats: ContinentStats[] = [];
+  historicalData: HistoricalData | null = null;
+  
   private map: any;
   private L: any;
   private Chart: any;
@@ -30,10 +36,19 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
-    this.covidDataService.getGlobalStats().subscribe((stats: any) => {
-      this.globalStats = stats;
+    combineLatest([
+      this.covidDataService.getGlobalStats(),
+      this.covidDataService.getContinentStats(),
+      this.covidDataService.getHistoricalData()
+    ]).subscribe(([globalStats, continentStats, historicalData]) => {
+      this.globalStats = globalStats;
+      this.continentStats = continentStats;
+      this.historicalData = historicalData;
+      
       if (this.isBrowser && this.Chart) {
         this.createGlobalChart();
+        this.createContinentChart();
+        this.createTrendChart();
       }
     });
   }
@@ -42,7 +57,6 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (!this.isBrowser) return;
 
     try {
-      // Dynamically import Leaflet and Chart.js only in browser environment
       const leafletModule = await import('leaflet');
       const chartModule = await import('chart.js/auto');
       
@@ -54,6 +68,8 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       
       if (this.globalStats) {
         this.createGlobalChart();
+        this.createContinentChart();
+        this.createTrendChart();
       }
     } catch (error) {
       console.error('Error loading modules:', error);
@@ -82,7 +98,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           this.L.circle([country.countryInfo.lat, country.countryInfo.long], {
             color: 'red',
             fillColor: '#f03',
-            fillOpacity: 0.5,
+            fillOpacity: 0.5, 
             radius: Math.sqrt(country.cases) * 100
           }).bindPopup(`
             <strong>${country.country}</strong><br>
@@ -96,35 +112,76 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   private createGlobalChart() {
-    if (!this.isBrowser || !this.chartElement?.nativeElement || !this.Chart || !this.globalStats) return;
+    if (!this.globalStats || !this.globalChartElement?.nativeElement) return;
 
-    try {
-      new this.Chart(this.chartElement.nativeElement, {
-        type: 'pie',
-        data: {
-          labels: ['Aktywne', 'Wyleczeni', 'Zgony'],
-          datasets: [{
-            data: [
-              this.globalStats.active,
-              this.globalStats.recovered,
-              this.globalStats.deaths
-            ],
-            backgroundColor: [
-              'rgba(255, 206, 86, 0.2)',
-              'rgba(75, 192, 192, 0.2)',
-              'rgba(255, 99, 132, 0.2)'
-            ],
-            borderColor: [
-              'rgba(255, 206, 86, 1)',
-              'rgba(75, 192, 192, 1)',
-              'rgba(255, 99, 132, 1)'
-            ],
-            borderWidth: 1
-          }]
+    new this.Chart(this.globalChartElement.nativeElement, {
+      type: 'pie',
+      data: {
+        labels: ['Aktywne', 'Wyleczeni', 'Zgony'],
+        datasets: [{
+          data: [
+            this.globalStats.active,
+            this.globalStats.recovered,
+            this.globalStats.deaths
+          ],
+          backgroundColor: [
+            'rgba(255, 206, 86, 0.2)',
+            'rgba(75, 192, 192, 0.2)',
+            'rgba(255, 99, 132, 0.2)'
+          ],
+          borderColor: [
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(255, 99, 132, 1)'
+          ],
+          borderWidth: 1
+        }]
+      }
+    });
+  }
+
+  private createContinentChart() {
+    if (!this.continentStats.length || !this.continentChartElement?.nativeElement) return;
+
+    new this.Chart(this.continentChartElement.nativeElement, {
+      type: 'bar',
+      data: {
+        labels: this.continentStats.map(c => c.continent),
+        datasets: [{
+          label: 'Przypadki na kontynent',
+          data: this.continentStats.map(c => c.cases),
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
         }
-      });
-    } catch (error) {
-      console.error('Error creating chart:', error);
-    }
+      }
+    });
+  }
+
+  private createTrendChart() {
+    if (!this.historicalData || !this.trendChartElement?.nativeElement) return;
+
+    const dates = Object.keys(this.historicalData.cases);
+    const cases = dates.map(date => this.historicalData!.cases[date]);
+
+    new this.Chart(this.trendChartElement.nativeElement, {
+      type: 'line',
+      data: {
+        labels: dates,
+        datasets: [{
+          label: 'Trend przypadków',
+          data: cases,
+          borderColor: 'rgb(75, 192, 192)',
+          tension: 0.1
+        }]
+      }
+    });
   }
 }

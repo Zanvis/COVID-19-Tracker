@@ -5,11 +5,12 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { CountryListComponent } from './country-list/country-list.component';
 import { CountryDetailComponent } from './country-detail/country-detail.component';
 import { ComparisonComponent } from './comparison/comparison.component';
+import { FooterComponent } from './footer/footer.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule, DashboardComponent, CountryListComponent, CountryDetailComponent, ComparisonComponent, RouterLinkActive, RouterLink],
+  imports: [RouterOutlet, CommonModule, DashboardComponent, CountryListComponent, CountryDetailComponent, ComparisonComponent, RouterLinkActive, RouterLink, FooterComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })

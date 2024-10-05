@@ -1,37 +1,54 @@
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">Globalne statystyki</h1>
+    <h1 class="text-2xl font-bold mb-6">Globalne statystyki COVID-19</h1>
     
+    <!-- Global Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-semibold mb-2">Przypadki</h2>
-        <p class="text-xl">{{globalStats?.cases | number}}</p>
+            <h2 class="text-lg font-semibold mb-2">Przypadki</h2>
+            <p class="text-xl">{{globalStats?.cases | number}}</p>
+            <p class="text-sm text-gray-600">Dzisiaj: +{{globalStats?.todayCases | number}}</p>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-semibold mb-2">Zgony</h2>
-        <p class="text-xl">{{globalStats?.deaths | number}}</p>
+            <h2 class="text-lg font-semibold mb-2">Zgony</h2>
+            <p class="text-xl">{{globalStats?.deaths | number}}</p>
+            <p class="text-sm text-gray-600">Dzisiaj: +{{globalStats?.todayDeaths | number}}</p>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-semibold mb-2">Wyleczeni</h2>
-        <p class="text-xl">{{globalStats?.recovered | number}}</p>
+            <h2 class="text-lg font-semibold mb-2">Wyleczeni</h2>
+            <p class="text-xl">{{globalStats?.recovered | number}}</p>
+            <p class="text-sm text-gray-600" *ngIf="globalStats?.isRecoveredEstimated">* dane szacunkowe</p>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-        <h2 class="text-lg font-semibold mb-2">Aktywne przypadki</h2>
-        <p class="text-xl">{{globalStats?.active | number}}</p>
+            <h2 class="text-lg font-semibold mb-2">Aktywne przypadki</h2>
+            <p class="text-xl">{{globalStats?.active | number}}</p>
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Charts Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div class="bg-white rounded-lg shadow p-4" *ngIf="isBrowser">
+            <h2 class="text-lg font-semibold mb-4">Rozkład przypadków</h2>
+            <canvas #globalChart></canvas>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4" *ngIf="isBrowser">
+            <h2 class="text-lg font-semibold mb-4">Przypadki na kontynent</h2>
+            <canvas #continentChart></canvas>
+        </div>
+    </div>
+
+    <!-- Trend Chart -->
+    <div class="bg-white rounded-lg shadow p-4 mb-8" *ngIf="isBrowser">
+        <h2 class="text-lg font-semibold mb-4">Trend przypadków (ostatnie 30 dni)</h2>
+        <canvas #trendChart></canvas>
+    </div>
+
+    <!-- Map -->
+    <div class="bg-white rounded-lg shadow p-4" *ngIf="isBrowser">
         <h2 class="text-lg font-semibold mb-4">Mapa przypadków</h2>
         <div #map style="height: 400px;" class="z-0"></div>
-        </div>
-        <div class="bg-white rounded-lg shadow p-4" *ngIf="isBrowser">
-        <h2 class="text-lg font-semibold mb-4">Wykres globalny</h2>
-        <canvas #globalChart></canvas>
-        </div>
     </div>
 
     <div *ngIf="!isBrowser" class="text-center py-4">
-        <p>Mapa i wykres będą dostępne po załadowaniu strony.</p>
+        <p>Mapa i wykresy będą dostępne po załadowaniu strony.</p>
     </div>
 </div>
