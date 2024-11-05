@@ -1,9 +1,17 @@
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { Chart } from 'chart.js';
-import { CountryStats, CovidDataService } from '../covid-data.service';
+import { Component, ElementRef, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Chart, ChartType } from 'chart.js/auto';
+import { CountryStats, CovidDataService } from '../covid-data.service';
+import { Subject, takeUntil } from 'rxjs';
+
+type MetricKey = keyof CountryStats;
+
+interface ComparisonMetric {
+  label: string;
+  value: MetricKey;
+  perCapita?: MetricKey;
+}
 
 @Component({
   selector: 'app-comparison',
@@ -12,89 +20,156 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './comparison.component.html',
   styleUrl: './comparison.component.css'
 })
-export class ComparisonComponent implements OnInit {
+export class ComparisonComponent implements OnInit, OnDestroy {
   @ViewChild('comparisonChart') chartElement!: ElementRef;
+  
   countries: CountryStats[] = [];
   selectedCountry1: string = '';
   selectedCountry2: string = '';
-  private Chart: any;
-  private currentChart: any;
+  selectedChartType: ChartType = 'bar';
+  perCapita: boolean = false;
+  
+  private chart: Chart | null = null;
+  private destroy$ = new Subject<void>();
+
+  metrics: ComparisonMetric[] = [
+    { label: 'Total Cases', value: 'cases', perCapita: 'casesPerOneMillion' },
+    { label: 'Deaths', value: 'deaths', perCapita: 'deathsPerOneMillion' },
+    { label: 'Recovered', value: 'recovered' },
+    { label: 'Active', value: 'active' },
+    { label: "Today's Cases", value: 'todayCases' },
+    { label: "Today's Deaths", value: 'todayDeaths' }
+  ];
+
+  quickStats: { label: string; value: MetricKey }[] = [
+    { label: 'Total Cases', value: 'cases' },
+    { label: 'Active Cases', value: 'active' },
+    { label: 'Deaths', value: 'deaths' },
+    { label: 'Recovery Rate', value: 'recovered' }
+  ];
 
   constructor(private covidDataService: CovidDataService) {}
 
-  async ngOnInit() {
-    if (typeof window !== 'undefined') {
-      const { Chart } = await import('chart.js/auto');
-      this.Chart = Chart;
-    }
-    
-    this.covidDataService.getAllCountriesStats().subscribe((countries: CountryStats[]) => {
-      this.countries = countries;
-    });
+  ngOnInit() {
+    this.covidDataService.getAllCountriesStats()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(countries => {
+        this.countries = countries.sort((a, b) => 
+          a.country.localeCompare(b.country)
+        );
+      });
   }
 
-  onCountrySelect() {
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.chart) {
+      this.chart.destroy();
+    }
+  }
+
+  onSelectionChange() {
     if (this.selectedCountry1 && this.selectedCountry2) {
       this.updateChart();
     }
   }
 
-  private updateChart() {
-    const country1Data = this.countries.find(c => c.country === this.selectedCountry1);
-    const country2Data = this.countries.find(c => c.country === this.selectedCountry2);
+  getCountryData(countryName: string): CountryStats | undefined {
+    return this.countries.find(c => c.country === countryName);
+  }
 
-    if (!country1Data || !country2Data || !this.chartElement || !this.Chart) {
+  getStatValue(country: CountryStats | undefined, metric: MetricKey): number | undefined {
+    if (!country) return undefined;
+    return country[metric] as number;
+  }
+
+  formatNumber(value: number | undefined): string {
+    if (value === undefined) return 'N/A';
+    return new Intl.NumberFormat().format(value);
+  }
+
+  private getMetricValue(country: CountryStats, metric: ComparisonMetric): number {
+    if (this.perCapita && metric.perCapita) {
+      return country[metric.perCapita] as number;
+    }
+    return country[metric.value] as number;
+  }
+
+  private updateChart() {
+    const country1Data = this.getCountryData(this.selectedCountry1);
+    const country2Data = this.getCountryData(this.selectedCountry2);
+
+    if (!country1Data || !country2Data || !this.chartElement) {
       return;
     }
 
-    // Zniszcz poprzedni wykres, jeśli istnieje
-    if (this.currentChart) {
-      this.currentChart.destroy();
+    if (this.chart) {
+      this.chart.destroy();
     }
 
     const ctx = this.chartElement.nativeElement.getContext('2d');
-    this.currentChart = new this.Chart(ctx, {
-      type: 'bar',
+    
+    const chartData = this.metrics.map(metric => ({
+      label: metric.label,
+      country1Value: this.getMetricValue(country1Data, metric),
+      country2Value: this.getMetricValue(country2Data, metric),
+    }));
+
+    this.chart = new Chart(ctx, {
+      type: this.selectedChartType,
       data: {
-        labels: ['Przypadki', 'Zgony', 'Wyleczeni', 'Aktywne'],
+        labels: chartData.map(d => d.label),
         datasets: [
           {
             label: country1Data.country,
-            data: [
-              country1Data.cases,
-              country1Data.deaths,
-              country1Data.recovered,
-              country1Data.active
-            ],
+            data: chartData.map(d => d.country1Value),
             backgroundColor: 'rgba(54, 162, 235, 0.2)',
             borderColor: 'rgba(54, 162, 235, 1)',
-            borderWidth: 1
+            borderWidth: 1,
+            fill: this.selectedChartType === 'radar'
           },
           {
             label: country2Data.country,
-            data: [
-              country2Data.cases,
-              country2Data.deaths,
-              country2Data.recovered,
-              country2Data.active
-            ],
+            data: chartData.map(d => d.country2Value),
             backgroundColor: 'rgba(255, 99, 132, 0.2)',
             borderColor: 'rgba(255, 99, 132, 1)',
-            borderWidth: 1
+            borderWidth: 1,
+            fill: this.selectedChartType === 'radar'
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true
+        plugins: {
+          title: {
+            display: true,
+            text: `COVID-19 Statistics Comparison ${this.perCapita ? '(Per Million)' : '(Total Numbers)'}`,
+            font: {
+              size: 16
+            }
+          },
+          legend: {
+            position: 'top'
           }
-        }
+        },
+        scales: this.selectedChartType !== 'radar' ? {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: (value) => {
+                if (typeof value === 'number') {
+                  return new Intl.NumberFormat('en', {
+                    notation: 'compact',
+                    compactDisplay: 'short'
+                  }).format(value);
+                }
+                return value;
+              }
+            }
+          }
+        } : undefined
       }
     });
   }
 }
-
-

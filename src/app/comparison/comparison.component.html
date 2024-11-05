@@ -1,33 +1,84 @@
-<div class="bg-white p-6 rounded-lg shadow">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-        <label for="country1" class="block text-sm font-medium text-gray-700">Pierwszy kraj</label>
-        <select 
-            id="country1"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            [(ngModel)]="selectedCountry1"
-            (ngModelChange)="onCountrySelect()">
-            <option value="">Wybierz kraj</option>
-            <option *ngFor="let country of countries" [value]="country.country">
-            {{country.country}}
-            </option>
-        </select>
-        </div>
-        <div>
-        <label for="country2" class="block text-sm font-medium text-gray-700">Drugi kraj</label>
-        <select 
-            id="country2"
-            class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            [(ngModel)]="selectedCountry2"
-            (ngModelChange)="onCountrySelect()">
-            <option value="">Wybierz kraj</option>
-            <option *ngFor="let country of countries" [value]="country.country">
-            {{country.country}}
-            </option>
-        </select>
-        </div>
+<div class="bg-white p-6 rounded-lg shadow-lg">
+  <!-- Header -->
+  <div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">COVID-19 Country Comparison</h2>
+    <p class="text-gray-600 mt-1">Compare COVID-19 statistics between countries</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div>
+      <label for="country1" class="block text-sm font-medium text-gray-700">First Country</label>
+      <select 
+        id="country1"
+        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        [(ngModel)]="selectedCountry1"
+        (ngModelChange)="onSelectionChange()">
+        <option value="">Select country</option>
+        <option *ngFor="let country of countries" [value]="country.country">
+          {{country.country}}
+        </option>
+      </select>
     </div>
-    <div class="h-96">
-        <canvas #comparisonChart></canvas>
+
+    <div>
+      <label for="country2" class="block text-sm font-medium text-gray-700">Second Country</label>
+      <select 
+        id="country2"
+        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        [(ngModel)]="selectedCountry2"
+        (ngModelChange)="onSelectionChange()">
+        <option value="">Select country</option>
+        <option *ngFor="let country of countries" [value]="country.country">
+          {{country.country}}
+        </option>
+      </select>
     </div>
+
+    <div>
+      <label for="chartType" class="block text-sm font-medium text-gray-700">Chart Type</label>
+      <select 
+        id="chartType"
+        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        [(ngModel)]="selectedChartType"
+        (ngModelChange)="onSelectionChange()">
+        <option value="bar">Bar Chart</option>
+        <option value="radar">Radar Chart</option>
+        <option value="line">Line Chart</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="metric" class="block text-sm font-medium text-gray-700">Metric Type</label>
+      <select 
+        id="metric"
+        class="mt-1 block w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+        [(ngModel)]="perCapita"
+        (ngModelChange)="onSelectionChange()">
+        <option [ngValue]="false">Total Numbers</option>
+        <option [ngValue]="true">Per Million</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Chart Container -->
+  <div class="h-[500px] relative">
+    <canvas #comparisonChart></canvas>
+  </div>
+
+  <!-- Stats Cards -->
+  <div *ngIf="selectedCountry1 && selectedCountry2" class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+    <div *ngFor="let country of [getCountryData(selectedCountry1), getCountryData(selectedCountry2)]" 
+         class="bg-gray-50 p-4 rounded-lg">
+      <h3 class="text-lg font-semibold text-gray-800 mb-3">{{country?.country}}</h3>
+      <div class="grid grid-cols-2 gap-4">
+        <div *ngFor="let stat of quickStats" class="bg-white p-3 rounded shadow-sm">
+          <p class="text-sm text-gray-600">{{stat.label}}</p>
+          <p class="text-lg font-bold text-gray-800">
+            {{formatNumber(getStatValue(country, stat.value))}}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
