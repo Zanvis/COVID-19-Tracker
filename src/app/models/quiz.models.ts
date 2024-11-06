@@ -43,6 +43,15 @@ export interface AnswerDetail {
 }
 
 export interface EducationalResource {
+  // id: number;
+  // title: string;
+  // description: string;
+  // content: string;
+  // category: string;
+  // tags: string[];
+  // imageUrl?: string;
+  // videoUrl?: string;
+  // attachments?: string[];
   id: number;
   title: string;
   description: string;
@@ -50,8 +59,7 @@ export interface EducationalResource {
   category: string;
   tags: string[];
   imageUrl?: string;
-  videoUrl?: string;
-  attachments?: string[];
+  readTime?: string;
 }
 
 export interface UserProgress {
