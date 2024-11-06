@@ -1,8 +1,8 @@
 <div class="container mx-auto px-4 py-8">
+  <!-- Header and search remain the same -->
   <div class="flex flex-col md:flex-row justify-between items-center mb-8">
     <h2 class="text-2xl font-bold">Materiały edukacyjne</h2>
     
-    <!-- Search bar -->
     <div class="relative w-full md:w-64 mt-4 md:mt-0">
       <input
         type="text"
@@ -19,7 +19,6 @@
 
   <!-- View controls -->
   <div class="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-    <!-- Favorites toggle -->
     <button 
       (click)="toggleFavoritesView()"
       class="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ease-in-out order-1 sm:order-none"
@@ -31,7 +30,6 @@
       Ulubione ({{favoriteResourcesCount}})
     </button>
 
-    <!-- View toggle -->
     <button (click)="toggleView()"
             class="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
       <span class="material-icons">{{isGridView ? 'view_list' : 'grid_view'}}</span>
@@ -39,7 +37,7 @@
     </button>
   </div>
 
-  <!-- Categories with count (only show when not in favorites view) -->
+  <!-- Categories -->
   <div *ngIf="!showFavorites" class="flex flex-wrap gap-4 mb-6">
     <button *ngFor="let cat of categories"
             class="px-4 py-2 rounded-lg transition-all duration-200 ease-in-out"
@@ -67,7 +65,7 @@
     </p>
   </div>
 
-  <!-- Resources Grid/List -->
+  <!-- Resources Grid/List with fixed mobile layout -->
   <div [class.grid]="isGridView"
        [class.grid-cols-1]="isGridView"
        [class.md:grid-cols-2]="isGridView"
@@ -75,33 +73,27 @@
        [class.gap-6]="isGridView"
        [class.space-y-4]="!isGridView">
     <div *ngFor="let resource of filteredResources"
-         [class.bg-white]="isGridView"
-         [class.rounded-lg]="true"
-         [class.shadow-lg]="true"
-         [class.hover:shadow-xl]="true"
-         [class.transition-shadow]="true"
-         [class.duration-300]="true"
-         [class.p-6]="true"
+         class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6"
          [class.flex]="!isGridView"
-         [class.flex-col]="isGridView"
-         [class.md:flex-row]="!isGridView"
+         [class.flex-col]="!isGridView && !isGridView"
+         [class.sm:flex-row]="!isGridView"
          [class.gap-6]="!isGridView">
       
       <!-- Resource Image -->
-      <div [class.mb-4]="isGridView"
+      <div [class.mb-4]="isGridView || (!isGridView && !isGridView)"
            [class.w-full]="isGridView"
-           [class.md:w-48]="!isGridView"
+           [class.sm:w-48]="!isGridView"
            [class.flex-shrink-0]="!isGridView">
         <img [src]="resource.imageUrl || '/assets/images/placeholder.jpg'"
              [alt]="resource.title"
              class="w-full h-48 object-cover rounded-lg">
       </div>
 
-      <div [class.flex-1]="!isGridView">
+      <div class="flex-1">
         <div class="flex items-start justify-between mb-2">
           <h3 class="text-xl font-semibold">{{resource.title}}</h3>
           <button (click)="toggleFavorite(resource)"
-                  class="text-yellow-400 hover:text-yellow-500 transition-colors">
+                  class="text-yellow-400 hover:text-yellow-500 transition-colors ml-2 flex-shrink-0">
             <span class="material-icons">
               {{isFavorite(resource) ? 'star' : 'star_border'}}
             </span>
@@ -118,12 +110,12 @@
           </span>
         </div>
 
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
           <span class="text-sm text-gray-500">
             {{resource.readTime || '5 min czytania'}}
           </span>
           
-          <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          <button class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   (click)="showResource(resource)">
             Czytaj więcej
           </button>
@@ -132,7 +124,7 @@
     </div>
   </div>
 
-  <!-- Resource Modal -->
+  <!-- Modal remains the same -->
   <div *ngIf="selectedResource" 
        class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
        (click)="closeModal($event)">
@@ -147,14 +139,14 @@
 
       <div class="prose prose-lg max-w-none" [innerHTML]="selectedResource.content"></div>
       
-      <div class="mt-6 flex justify-between items-center">
-        <div class="flex gap-2">
-          <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-2"
+      <div class="mt-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+        <div class="flex flex-col sm:flex-row gap-2">
+          <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center gap-2"
                   (click)="shareResource(selectedResource)">
             <span class="material-icons">share</span>
             Udostępnij
           </button>
-          <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center gap-2"
+          <button class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors flex items-center justify-center gap-2"
                   (click)="downloadResource(selectedResource)">
             <span class="material-icons">download</span>
             Pobierz PDF
