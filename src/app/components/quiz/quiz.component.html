@@ -67,3 +67,103 @@
       </div>
     </div>
   </div>
+  <div *ngIf="currentQuiz && !quizCompleted" class="fixed top-4 right-4 bg-white p-4 rounded-lg shadow">
+    <div class="text-center">
+      <p class="text-sm text-gray-600">Pozostały czas</p>
+      <p class="text-2xl font-bold" [ngClass]="{'text-red-600': timeLeft <= 60}">
+        {{formatTime(timeLeft)}}
+      </p>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div *ngIf="currentQuiz && !quizCompleted" class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+    <div class="bg-blue-600 h-2.5 rounded-full" 
+         [style.width.%]="(currentQuestionIndex / currentQuiz.questions.length) * 100">
+    </div>
+  </div>
+
+  <!-- Difficulty Badge -->
+  <div *ngIf="currentQuiz && !quizCompleted" class="mb-4">
+    <span class="px-3 py-1 rounded-full text-sm"
+          [ngClass]="{
+            'bg-green-100 text-green-800': currentQuiz.difficulty === 'easy',
+            'bg-yellow-100 text-yellow-800': currentQuiz.difficulty === 'medium',
+            'bg-red-100 text-red-800': currentQuiz.difficulty === 'hard'
+          }">
+      {{currentQuiz.difficulty | titlecase}}
+    </span>
+  </div>
+
+  <!-- Answer Feedback -->
+  <div *ngIf="showFeedback" class="mt-4 p-4 rounded"
+       [ngClass]="{'bg-green-100': isCorrectAnswer, 'bg-red-100': !isCorrectAnswer}">
+    <p class="font-bold mb-2">
+      {{isCorrectAnswer ? 'Poprawna odpowiedź!' : 'Niepoprawna odpowiedź'}}
+    </p>
+    <p>{{currentQuestion.explanation}}</p>
+  </div>
+
+  <!-- Quiz Results with Detailed Feedback -->
+  <div *ngIf="quizCompleted" class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-2xl font-bold mb-4">Wyniki quizu</h2>
+      
+      <!-- Score Summary -->
+      <div class="mb-6">
+        <p class="text-lg">
+          Twój wynik: {{correctAnswers}} z {{currentQuiz!.questions.length}} 
+          ({{(correctAnswers / currentQuiz!.questions.length * 100).toFixed(1)}}%)
+        </p>
+        <p class="text-gray-600">
+          Czas ukończenia: {{formatTime(totalTimeSpent)}}
+        </p>
+      </div>
+
+      <!-- Performance Metrics -->
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="text-center p-4 bg-gray-50 rounded">
+          <p class="text-sm text-gray-600">Punkty</p>
+          <p class="text-2xl font-bold">{{totalPoints}}</p>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded">
+          <p class="text-sm text-gray-600">Seria poprawnych</p>
+          <p class="text-2xl font-bold">{{maxStreak}}</p>
+        </div>
+        <div class="text-center p-4 bg-gray-50 rounded">
+          <p class="text-sm text-gray-600">Średni czas</p>
+          <p class="text-2xl font-bold">{{averageTimePerQuestion}}s</p>
+        </div>
+      </div>
+
+      <!-- Detailed Question Review -->
+      <div class="space-y-4">
+        <h3 class="text-xl font-bold mb-2">Przegląd pytań</h3>
+        <div *ngFor="let answer of answerDetails; let i = index" 
+             class="p-4 rounded"
+             [ngClass]="{'bg-green-50': answer.isCorrect, 'bg-red-50': !answer.isCorrect}">
+          <p class="font-bold">Pytanie {{i + 1}}</p>
+          <p class="mb-2">{{currentQuiz!.questions[i].question}}</p>
+          <p class="text-sm">
+            Twoja odpowiedź: {{currentQuiz!.questions[i].options[answer.selectedAnswer]}}
+            <span *ngIf="!answer.isCorrect">
+              (Poprawna: {{currentQuiz!.questions[i].options[currentQuiz!.questions[i].correctAnswer]}})
+            </span>
+          </p>
+          <p class="text-sm text-gray-600">Czas: {{answer.timeSpent}}s</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-4 mt-6">
+        <button class="flex-1 py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700"
+                (click)="resetQuiz()">
+          Spróbuj ponownie
+        </button>
+        <button class="flex-1 py-2 px-4 bg-gray-600 text-white rounded hover:bg-gray-700"
+                (click)="shareResults()">
+          Udostępnij wyniki
+        </button>
+      </div>
+    </div>
+  </div>

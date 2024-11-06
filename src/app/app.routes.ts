@@ -5,6 +5,7 @@ import { CountryDetailComponent } from './components/country-detail/country-deta
 import { ComparisonComponent } from './components/comparison/comparison.component';
 import { EducationalResourcesComponent } from './components/educational-resources/educational-resources.component';
 import { QuizComponent } from './components/quiz/quiz.component';
+import { QuizDashboardComponent } from './components/quiz-dashboard/quiz-dashboard.component';
 
 export const routes: Routes = [
     { path: '', component: DashboardComponent },
@@ -13,5 +14,6 @@ export const routes: Routes = [
     { path: 'comparison', component: ComparisonComponent },
     { path: 'educational-resources', component: EducationalResourcesComponent },
     { path: 'quiz', component: QuizComponent },
+    { path: 'quiz-dashboard', component: QuizDashboardComponent },
     { path: '**', redirectTo: '' }
 ];
