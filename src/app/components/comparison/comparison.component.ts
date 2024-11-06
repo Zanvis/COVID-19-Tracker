@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartType } from 'chart.js/auto';
-import { CountryStats, CovidDataService } from '../covid-data.service';
+import { CountryStats, CovidDataService } from '../../services/covid-data.service';
 import { Subject, takeUntil } from 'rxjs';
 
 type MetricKey = keyof CountryStats;

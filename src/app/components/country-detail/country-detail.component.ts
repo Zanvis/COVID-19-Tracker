@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Chart } from 'chart.js/auto';
-import { CountryStats, CovidDataService } from '../covid-data.service';
+import { CountryStats, CovidDataService } from '../../services/covid-data.service';
 import { firstValueFrom } from 'rxjs';
 
 @Component({

@@ -3,7 +3,7 @@ import { Chart } from 'chart.js/auto';
 import * as L from 'leaflet';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { ContinentStats, CovidDataService, GlobalStats, HistoricalData } from '../covid-data.service';
+import { ContinentStats, CountryStats, CovidDataService, GlobalStats, HistoricalData } from '../../services/covid-data.service';
 import { combineLatest } from 'rxjs';
 
 @Component({

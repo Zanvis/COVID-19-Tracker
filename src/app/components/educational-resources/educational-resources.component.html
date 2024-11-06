@@ -1,0 +1,49 @@
+<div class="container mx-auto px-4 py-8">
+    <h2 class="text-2xl font-bold mb-6">Materiały edukacyjne</h2>
+    
+    <!-- Categories -->
+    <div class="flex space-x-4 mb-6">
+      <button *ngFor="let cat of categories"
+              class="px-4 py-2 rounded"
+              [class.bg-blue-600]="selectedCategory === cat"
+              [class.text-white]="selectedCategory === cat"
+              [class.bg-gray-100]="selectedCategory !== cat"
+              (click)="selectCategory(cat)">
+        {{getCategoryLabel(cat)}}
+      </button>
+    </div>
+
+    <!-- Resources Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngFor="let resource of filteredResources"
+           class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-xl font-semibold mb-2">{{resource.title}}</h3>
+        <p class="text-gray-600 mb-4">{{resource.description}}</p>
+        
+        <div class="flex flex-wrap gap-2 mb-4">
+          <span *ngFor="let tag of resource.tags"
+                class="px-3 py-1 bg-gray-100 rounded-full text-sm">
+            {{tag}}
+          </span>
+        </div>
+        
+        <button class="text-blue-600 hover:text-blue-800"
+                (click)="showResource(resource)">
+          Czytaj więcej
+        </button>
+      </div>
+    </div>
+
+    <!-- Resource Modal -->
+    <div *ngIf="selectedResource" 
+         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+        <h2 class="text-2xl font-bold mb-4">{{selectedResource.title}}</h2>
+        <div class="prose" [innerHTML]="selectedResource.content"></div>
+        <button class="mt-6 px-4 py-2 bg-blue-600 text-white rounded"
+                (click)="selectedResource = null">
+          Zamknij
+        </button>
+      </div>
+    </div>
+  </div>

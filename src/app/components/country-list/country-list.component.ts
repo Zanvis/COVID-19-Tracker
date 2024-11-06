@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CountryStats, CovidDataService } from '../covid-data.service';
+import { CountryStats, CovidDataService } from '../../services/covid-data.service';
 import { RouterLink } from '@angular/router';
 
 @Component({
