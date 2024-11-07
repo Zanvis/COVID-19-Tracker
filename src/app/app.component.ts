@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ElementRef, HostListener } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { CountryListComponent } from './components/country-list/country-list.component';
@@ -19,7 +19,22 @@ import { QuizComponent } from './components/quiz/quiz.component';
 export class AppComponent {
   title = 'COVID19';
   isMobileMenuOpen = false;
+  constructor(private elementRef: ElementRef) {}
 
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.isMobileMenuOpen) return;
+
+    const mobileMenu = this.elementRef.nativeElement.querySelector('.mobile-menu');
+    const hamburgerButton = this.elementRef.nativeElement.querySelector('[aria-expanded]');
+    
+    const clickedInMenu = mobileMenu?.contains(event.target as Node);
+    const clickedHamburger = hamburgerButton?.contains(event.target as Node);
+
+    if (!clickedInMenu && !clickedHamburger) {
+      this.isMobileMenuOpen = false;
+    }
+  }
   toggleMobileMenu() {
     this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
