@@ -15,5 +15,6 @@ export const routes: Routes = [
     { path: 'educational-resources', component: EducationalResourcesComponent },
     { path: 'quiz', component: QuizComponent },
     { path: 'quiz-dashboard', component: QuizDashboardComponent },
+    { path: 'quiz/:id', component: QuizComponent },
     { path: '**', redirectTo: '' }
 ];

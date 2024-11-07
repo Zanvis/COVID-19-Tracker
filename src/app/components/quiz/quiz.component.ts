@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AnswerDetail, Quiz, QuizQuestion, QuizResult } from '../../models/quiz.models';
 import { EducationalService } from '../../services/educational.service';
 import { interval, Subscription } from 'rxjs';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 
 @Component({
   selector: 'app-quiz',
@@ -33,11 +33,19 @@ export class QuizComponent implements OnInit, OnDestroy {
   
   constructor(
     private educationalService: EducationalService,
-    private router: Router
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
+    // Get quiz ID from route parameters
     this.quizzes = this.educationalService.getQuizzes();
+    this.route.params.subscribe(params => {
+      const quizId = Number(params['id']);
+      const quiz = this.educationalService.getQuizzes().find(q => q.id === quizId);
+      if (quiz) {
+        this.startQuiz(quiz);
+      }
+    });
   }
 
   ngOnDestroy() {
